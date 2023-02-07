@@ -70,6 +70,10 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         code = 500
         body = ""
+        path = url.split("/")
+        host = path[0]
+        header = "GET HTTP/1.1\r\n"
+        header += host +"\r\n"
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
