@@ -51,12 +51,14 @@ class HTTPClient(object):
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
+        print(self.socket)
         
     def close(self):
         self.socket.close()
 
     # read everything from the socket
     def recvall(self, sock):
+        print(sock)
         buffer = bytearray()
         done = False
         while not done:
@@ -70,10 +72,25 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         code = 500
         body = ""
-        path = url.split("/")
+
+        path = url.split("/", 1)
         host = path[0]
-        header = "GET HTTP/1.1\r\n"
-        header += host +"\r\n"
+        self.connect(host, 8080)
+
+        if len(path) > 1:
+            path = path[1]
+        else:
+            path = ""
+
+        request = f"GET /{path} HTTP/1.1\r\n"
+        request += f"Host:{host}\n\n"
+
+        self.sendall(request)
+
+        response = self.recvall(self.socket)
+        self.close()
+        print(response)
+
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
