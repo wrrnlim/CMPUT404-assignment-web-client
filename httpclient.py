@@ -36,7 +36,6 @@ class HTTPResponse(object):
 
 
 class HTTPClient(object):
-    # def get_host_port(self,url):
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,7 +45,7 @@ class HTTPClient(object):
     def get_code(self, data):
         headers = self.get_headers(data)
         code = headers[0].split(" ")
-        return ' '.join(x for x in code[1:]) # code number + description
+        return int(code[1])
 
     def get_headers(self, data):
         data = data.splitlines()
@@ -77,19 +76,19 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-
-        path = url.split("/", 1)
-        host = path[0]
-        port = 80
+        parsedUrl = urllib.parse.urlsplit(url)
+        path = parsedUrl.path
+        host = parsedUrl.hostname
+        port = parsedUrl.port
+        
+        if not port: port = 80
+        if not path: path = "/"
+        
         self.connect(host, port)
 
-        if len(path) > 1:
-            path = path[1]
-        else:
-            path = ""
-
-        request = f"GET /{path} HTTP/1.1\r\n"
-        request += f"Host:{host}\n\n"
+        request = f"GET {path} HTTP/1.1\r\n"
+        request += f"Host: {host}\r\n\r\n"
+        print(request)
 
         self.sendall(request)
 
@@ -100,7 +99,6 @@ class HTTPClient(object):
         
         code = self.get_code(response)
         body = self.get_body(response)
-        print(code)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
