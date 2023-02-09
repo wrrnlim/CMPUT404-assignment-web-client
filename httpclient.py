@@ -112,9 +112,8 @@ class HTTPClient(object):
 
         if type(args) is dict:
             encoded_args = ""
-            for key in args.keys():
-                value = args[key].replace("\r","").replace("\n","")
-                key = key.replace("\r","").replace("\n","")
+            for key in args:
+                value = args[key]
                 if encoded_args == "":
                     encoded_args += f"{key}={value}"
                 else:
