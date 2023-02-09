@@ -76,20 +76,25 @@ class HTTPClient(object):
     
     def parse_url(self, url):
         parsedUrl = urllib.parse.urlsplit(url)
+        print(parsedUrl)
         path = parsedUrl.path
         host = parsedUrl.hostname
         port = parsedUrl.port
+        query = parsedUrl.query
         
         if not port: port = 80
         if not path: path = "/"
-        return path, host, port
+        return path, host, port, query
     
     def GET(self, url, args=None):
-        path, host, port = self.parse_url(url)
+        path, host, port, query = self.parse_url(url)
         
+        if query and not args:
+            args = query
+
         self.connect(host, port)
 
-        request = f"GET {path} HTTP/1.1\r\n"
+        request = f"GET {path}?{args} HTTP/1.1\r\n"
         request += f"Host: {host}\r\n\r\n"
         print(request)
 
@@ -107,10 +112,12 @@ class HTTPClient(object):
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        path, host, port = self.parse_url(url)
+        path, host, port, query = self.parse_url(url)
         self.connect(host, port)
 
-        if type(args) is dict:
+        if query and not args:
+            args = query
+        elif type(args) is dict:
             encoded_args = ""
             for key in args:
                 value = args[key]
