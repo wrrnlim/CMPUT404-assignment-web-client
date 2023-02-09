@@ -108,12 +108,21 @@ class HTTPClient(object):
 
     def POST(self, url, args=None):
         path, host, port = self.parse_url(url)
-        
         self.connect(host, port)
 
+        if type(args) is dict:
+            encoded_args = ""
+            for key in args.keys():
+                value = args[key].replace("\r","").replace("\n","")
+                key = key.replace("\r","").replace("\n","")
+                if encoded_args == "":
+                    encoded_args += f"{key}={value}"
+                else:
+                    encoded_args += f"&{key}={value}"
+            args = encoded_args
         request = f"POST {path} HTTP/1.1\r\n"
-        request += f"Host: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n{args}\r\n"
-        print(request)
+        request += f"Host: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(str(args))}\r\n\r\n{args}\r\n\r\n"
+        print("THE REQUEST IS:\r\n" + request)
 
         self.sendall(request)
 
@@ -122,10 +131,11 @@ class HTTPClient(object):
         response = self.recvall(self.socket)
         self.close()
 
-        print(response)
+        print("THE RESPONSE IS:\r\n" + response)
         
         code = self.get_code(response)
         body = self.get_body(response)
+        print(code, body)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
