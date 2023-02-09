@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
-# Copyright 2016 Abram Hindle, https://github.com/tywtyw2002, and https://github.com/treedust
+# Copyright 2023 Abram Hindle, https://github.com/tywtyw2002, https://github.com/treedust, and Warren Lim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,10 +72,9 @@ class HTTPClient(object):
                 buffer.extend(part)
             else:
                 done = not part
-        print(buffer)
         return buffer.decode('utf-8')
-
-    def GET(self, url, args=None):
+    
+    def parse_url(self, url):
         parsedUrl = urllib.parse.urlsplit(url)
         path = parsedUrl.path
         host = parsedUrl.hostname
@@ -83,6 +82,10 @@ class HTTPClient(object):
         
         if not port: port = 80
         if not path: path = "/"
+        return path, host, port
+    
+    def GET(self, url, args=None):
+        path, host, port = self.parse_url(url)
         
         self.connect(host, port)
 
@@ -96,14 +99,33 @@ class HTTPClient(object):
 
         response = self.recvall(self.socket)
         self.close()
+
+        print(response)
         
         code = self.get_code(response)
         body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        path, host, port = self.parse_url(url)
+        
+        self.connect(host, port)
+
+        request = f"POST {path} HTTP/1.1\r\n"
+        request += f"Host: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n{args}\r\n"
+        print(request)
+
+        self.sendall(request)
+
+        self.socket.shutdown(socket.SHUT_WR)
+
+        response = self.recvall(self.socket)
+        self.close()
+
+        print(response)
+        
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
