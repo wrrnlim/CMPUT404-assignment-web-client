@@ -76,7 +76,6 @@ class HTTPClient(object):
     
     def parse_url(self, url):
         parsedUrl = urllib.parse.urlsplit(url)
-        print(parsedUrl)
         path = parsedUrl.path
         host = parsedUrl.hostname
         port = parsedUrl.port
@@ -89,13 +88,17 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         path, host, port, query = self.parse_url(url)
         
-        if query and not args:
-            args = query
+        if not args:
+            args = ""
+            if query:
+                args = query
+        if args:
+            args = "?" + args
 
         self.connect(host, port)
 
-        request = f"GET {path}?{args} HTTP/1.1\r\n"
-        request += f"Host: {host}\r\n\r\n"
+        request = f"GET {path}{args} HTTP/1.1\r\n"
+        request += f"Host: {host}\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n"
         print(request)
 
         self.sendall(request)
