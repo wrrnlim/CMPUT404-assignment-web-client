@@ -98,17 +98,14 @@ class HTTPClient(object):
         self.connect(host, port)
 
         request = f"GET {path}{args} HTTP/1.1\r\n"
-        request += f"Host: {host}\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\n\r\n"
-        print(request)
+        request += f"Host: {host}\r\nConnection: close\r\nAccept: */*\r\n\r\n"
 
         self.sendall(request)
 
-        self.socket.shutdown(socket.SHUT_WR)
+        # self.socket.shutdown(socket.SHUT_WR)
 
         response = self.recvall(self.socket)
         self.close()
-
-        print(response)
         
         code = self.get_code(response)
         body = self.get_body(response)
@@ -131,7 +128,6 @@ class HTTPClient(object):
             args = encoded_args
         request = f"POST {path} HTTP/1.1\r\n"
         request += f"Host: {host}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(str(args))}\r\n\r\n{args}\r\n\r\n"
-        print("THE REQUEST IS:\r\n" + request)
 
         self.sendall(request)
 
@@ -139,12 +135,10 @@ class HTTPClient(object):
 
         response = self.recvall(self.socket)
         self.close()
-
-        print("THE RESPONSE IS:\r\n" + response)
         
         code = self.get_code(response)
         body = self.get_body(response)
-        print(code, body)
+        
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
